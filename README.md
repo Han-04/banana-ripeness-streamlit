@@ -1,43 +1,81 @@
-# Banana Ripeness Streamlit Application
+# Banana Ripeness Streamlit App
 
-## Files
+This repository deploys the trained GrabCut + adaptive CIELAB K-means + SVM
+banana-ripeness classifier as a Streamlit application.
 
-- `streamlit_app.py` — GUI and the complete inference pipeline.
-- `requirements.txt` — Python dependencies.
-- `banana_ripeness_color_svm.joblib` — trained model bundle produced by the Colab notebook. You must add this file after training.
+## Repository structure
 
-## Prepare the model
+```text
+banana_streamlit_app/
+├── .streamlit/
+│   └── config.toml
+├── models/
+│   ├── README.md
+│   └── grabcut_cielab_kmeans_svm.joblib  # Add this trained file
+├── preprocessing.py
+├── requirements.txt
+├── streamlit_app.py
+└── README.md
+```
 
-1. Open `banana_ripeness_streamlit_confidence_colab.ipynb` in Google Colab.
-2. Run all cells through model training and evaluation.
-3. Download `/content/banana_svm_artifacts/banana_ripeness_color_svm.joblib`.
-4. Put the downloaded model in the same directory as `streamlit_app.py`.
+## 1. Download the trained model from Colab
 
-The GUI also allows the model bundle to be uploaded through its sidebar. Only load a joblib file that you created or trust.
+After running the training notebook, run:
 
-## Run locally
+```python
+from google.colab import files
+
+files.download(
+    "/content/banana_svm_outputs/grabcut_cielab_kmeans_svm.joblib"
+)
+```
+
+Place the downloaded file inside the `models` folder. Do not rename it unless
+you also update `MODEL_PATH` in `streamlit_app.py`.
+
+## 2. Match the scikit-learn version
+
+A joblib SVM should be loaded with the same scikit-learn version used to train
+it. Check the Colab version:
+
+```python
+import sklearn
+print(sklearn.__version__)
+```
+
+If Colab prints, for example, `1.7.2`, change the corresponding line in
+`requirements.txt` to:
+
+```text
+scikit-learn==1.7.2
+```
+
+## 3. Test locally
+
+From the repository root:
 
 ```bash
 python -m venv .venv
-
-# Windows
-.venv\Scripts\activate
-
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 streamlit run streamlit_app.py
 ```
 
-Streamlit will print a local URL, normally `http://localhost:8501`.
+## 4. Upload to GitHub
 
-## Prediction output
+Create a GitHub repository and upload the complete contents of this directory,
+including the `.streamlit` directory and trained `.joblib` file.
 
-For each uploaded image, the application displays:
+## 5. Deploy on Streamlit Community Cloud
 
-- the predicted ripeness class;
-- model confidence for the predicted class;
-- probabilities for all four classes;
-- the original image;
-- the LAB color-segmentation mask;
-- the segmented banana region of interest.
+1. Open <https://share.streamlit.io> and connect the GitHub account.
+2. Select **Create app**.
+3. Select the repository and branch.
+4. Set the entrypoint to `streamlit_app.py`.
+5. In advanced settings, choose the Python version closest to the Colab runtime.
+6. Select **Deploy**.
 
-Confidence comes from `SVC.predict_proba`. It represents the classifier's relative certainty and is not a guarantee that the prediction is correct. Low-confidence results should be reviewed, especially when the image contains several objects, unusual lighting or a cluttered background.
+## Important model constraint
+
+`preprocessing.py` must remain synchronized with the Colab training notebook.
+Changing the image size, GrabCut settings, K candidates, histogram bins, or
+feature order requires retraining and re-exporting the SVM.
