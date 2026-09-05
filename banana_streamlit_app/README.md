@@ -79,3 +79,11 @@ including the `.streamlit` directory and trained `.joblib` file.
 `preprocessing.py` must remain synchronized with the Colab training notebook.
 Changing the image size, GrabCut settings, K candidates, histogram bins, or
 feature order requires retraining and re-exporting the SVM.
+
+## Confidence scores
+
+The Streamlit app displays the probability assigned to the predicted class and
+warns when it is below the saved 60% threshold. Run the updated Colab notebook
+to train the SVM with `probability=True`, then replace the joblib file in
+`models/`. An older model will still predict, but the app will show decision
+scores instead of a confidence percentage.
